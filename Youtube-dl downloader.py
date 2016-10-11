@@ -12,18 +12,19 @@ import tempfile
 import time
 import ui
 import zipfile
+import codecs
 
 youtubedl_dir = 'youtube_dl'
-youtubedl_location = './site-packages/'
+youtubedl_location = '../site-packages/'
 backup_location = './backup/youtube_dl/'
 youtubedl_downloadurl = 'https://github.com/rg3/youtube-dl/archive/master.zip'
 youtubedl_unarchive_location = './youtube-dl-master/'
 files_to_change = [('utils.py','import ctypes','#import ctypes'),
                    ('utils.py','import pipes','#import pipes'),
-                   ('YoutubeDL.py','self._err_file.isatty() and ',''),
-                   ('downloader/common.py','(\'\r\x1b[K\' if sys.stderr.isatty() else \'\r\')','\'r\''),
-                   ('downloader/common.py','(\'\r\x1b[K\' if sys.stderr.isatty() else \'\r\')','\r'),
-                   ('extractor/common.py',' and sys.stderr.isatty()','')]
+                   ('YoutubeDL.py', 'and self._err_file.isatty()', 'and False'),
+                   ('extractor/common.py', 'and sys.stderr.isatty():', 'and False:'),
+                   ('downloader/common.py', "('\\r\\x1b[K' if sys.stderr.isatty() else '\\r')", "'\\r'")
+                   ]
 
 def backup_youtubedl(sender):
     console.show_activity('Checking for youtube-dl')
@@ -91,12 +92,12 @@ def process_youtubedl_for_pythonista():
         replace_in_file(youtubedl_location+youtubedl_dir+'/'+filename, old_str, new_str)
 
 def replace_in_file(file_path, old_str, new_str):
-    with open(file_path) as old_file:
+    with codecs.open(file_path, 'r', 'utf-8') as old_file:
         #Create temp file
         fh, abs_path = tempfile.mkstemp()
         os.close(fh)  # close low level and reopen high level
-        with open(abs_path,'w') as new_file:
-            for line in old_file:
+        with codecs.open(abs_path, 'w', 'utf-8') as new_file:
+            for line in old_file.readlines():
                 new_file.write(line.replace(old_str, new_str))
     #Remove original file
     os.remove(file_path)
